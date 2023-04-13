@@ -24,7 +24,7 @@
 
 6. Upload the file `dataset/players-1.json` and `dataset/players-2.json` to the Azure Blob Storage.
 
-7. Create folder `done` in the Azure Blob Storage and upload the file `empty` to the folder `done`.
+7. Create folder `done` in the Azure Blob Storage and upload the file `dataset/empty` to the folder `done`.
 
 8. Test the pipeline.
 
