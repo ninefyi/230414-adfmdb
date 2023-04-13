@@ -1,5 +1,5 @@
 name: run-azure-data-factory-pipeline
-run-name: ${{ github.actor }} deployed at ${{ github.workflow.event.created_at }}
+run-name: ${{ github.actor }} deployed at ${{ github.event.repository.updated_at }}
 on: [workflow_dispatch]
 env:
   AZ_DF_NAME: adfmdb
