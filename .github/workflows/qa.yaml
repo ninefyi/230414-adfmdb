@@ -1,5 +1,5 @@
 name: run-azure-data-factory-pipeline
-run-name: ${{ github.actor }} deployed at ${{ github.event.repository.updated_at }}
+run-name: ${{ github.actor }} deployed at ${{ github.run_id }}
 on: [workflow_dispatch]
 env:
   AZ_DF_NAME: adfmdb
@@ -18,4 +18,4 @@ jobs:
     - run: |
         az extension add --name datafactory
     - run: |
-        az datafactory pipeline create-run --factory-name ${{ env.AZ_DF_NAME }} --parameters {\"SourceStore_Location\":\"files\", \"SourceStore_Directory\":\"\", \"DestinationStore_Location\":\"files\", \"SourceStore_Directory\":\"done\"} --name ${{ env.AZ_DF_PIPELINE }} --resource-group ${{ env.AZ_DF_RESOURCE_GROUP }} 
+        az datafactory pipeline create-run --factory-name ${{ env.AZ_DF_NAME }} --parameters "{\"SourceStore_Location\":\"files\", \"SourceStore_Directory\":\"\", \"DestinationStore_Location\":\"files\", \"SourceStore_Directory\":\"done\"}" --name ${{ env.AZ_DF_PIPELINE }} --resource-group ${{ env.AZ_DF_RESOURCE_GROUP }} 
