@@ -1,5 +1,5 @@
 name: run-azure-data-factory-pipeline
-run-name: ${{ github.actor }} is deploy
+run-name: ${{ github.actor }} deploy to ${{ github.event.deployment.environment }} at ${{ github.event.deployment.created_at }}
 on: [workflow_dispatch]
 env:
   AZ_DF_NAME: adfmdb
@@ -14,5 +14,7 @@ jobs:
     - uses: azure/login@v1
       with:
         creds: ${{ secrets.AZ_CREDENTIALS }}
+    - run: |
+        az config set extension.use_dynamic_install=yes_without_prompt
     - run: |
         az datafactory pipeline create-run --factory-name ${{ env.AZ_DF_NAME }} --parameters ${{ env.AZ_DF_PARAMS }} --name ${{ env.AZ_DF_PIPELINE }} --resource-group ${{ env.AZ_DF_RESOURCE_GROUP }} 
