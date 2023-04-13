@@ -584,10 +584,11 @@
                     },
                     "DestinationStore_Location": {
                         "type": "String",
-                        "defaultValue": "done"
+                        "defaultValue": "files"
                     },
                     "DestinationStore_Directory": {
-                        "type": "String"
+                        "type": "String",
+                        "defaultValue": "done"
                     }
                 },
                 "annotations": [],

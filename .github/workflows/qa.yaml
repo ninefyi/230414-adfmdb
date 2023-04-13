@@ -21,4 +21,4 @@ jobs:
         az extension add --name datafactory
     - name: run pipeline
       run: |
-        az datafactory pipeline create-run --factory-name ${{ env.AZ_DF_NAME }} --parameters "{\"SourceStore_Location\":\"files\", \"SourceStore_Directory\":\"\", \"DestinationStore_Location\":\"files\", \"SourceStore_Directory\":\"done\"}" --name ${{ env.AZ_DF_PIPELINE }} --resource-group ${{ env.AZ_DF_RESOURCE_GROUP }} 
+        az datafactory pipeline create-run --factory-name ${{ env.AZ_DF_NAME }} --parameters "{\"SourceStore_Location\":\"files\", \"SourceStore_Directory\":\"\", \"DestinationStore_Location\":\"files\", \"DestinationStore_Directory\":\"done\"}" --name ${{ env.AZ_DF_PIPELINE }} --resource-group ${{ env.AZ_DF_RESOURCE_GROUP }} 

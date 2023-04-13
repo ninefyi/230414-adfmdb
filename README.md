@@ -29,5 +29,5 @@
 8. Test the pipeline.
 
 ```
-az datafactory pipeline create-run --factory-name "adfmdb" --parameters "{\"SourceStore_Location\":\"files\", \"SourceStore_Directory\":\"\", \"DestinationStore_Location\":\"files\", \"SourceStore_Directory\":\"done\"}" --name "CopyJsonToMongoDBAtlas" --resource-group "rg-demo"
+az datafactory pipeline create-run --factory-name "adfmdb" --parameters "{\"SourceStore_Location\":\"files\", \"SourceStore_Directory\":\"\", \"DestinationStore_Location\":\"files\", \"DestinationStore_Directory\":\"done\"}" --name "CopyJsonToMongoDBAtlas" --resource-group "rg-demo"
 ```
