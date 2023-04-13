@@ -1,0 +1,84 @@
+myIP=$(curl ipinfo.io/ip)
+myRG=rg-demo
+myLocation=eastasia
+myVnet=vnet-demo
+mySubnet=subnet-demo
+myStorageAccount=stmdbdemo
+myContainer=files
+myDirectory=done
+
+az feature register \
+--namespace Microsoft.Network \
+--name AllowGlobalTagsForStorage
+
+az group create \
+--name $myRG \
+--location $myLocation
+
+az network vnet create \
+--name $myVnet \
+--resource-group $myRG \
+--address-prefix 10.0.0.0/16 \
+--subnet-name $mySubnet \
+--subnet-prefixes 10.0.0.0/24
+
+az network public-ip create \
+--resource-group $myRG \
+--name pip-vm-demo \
+--sku Standard \
+--location $myLocation
+
+az vm create \
+--resource-group $myRG \
+--name vm-demo --location $myLocation \
+--image MicrosoftWindowsDesktop:windows-11:win11-21h2-pro:22000.1817.230332 \
+--vnet-name $myVnet \
+--subnet $mySubnet \
+--admin-username superman --admin-password password123$ \
+--size Standard_B2ms \
+--public-ip-address pip-vm-demo
+
+az network vnet subnet update \
+--resource-group $myRG \
+--vnet-name $myVnet \
+--name $mySubnet \
+--disable-private-endpoint-network-policies true
+
+az storage account create \
+--name $myStorageAccount \
+--resource-group $myRG \
+--location $myLocation \
+--sku Standard_LRS \
+--allow-blob-public-access true
+
+az storage account network-rule add \
+--resource-group $myRG \
+--account-name $myStorageAccount \
+--ip-address $myIP
+
+az storage account update \
+--resource-group $myRG \
+--name $myStorageAccount \
+--default-action Deny
+
+az network vnet subnet update \
+--resource-group $myRG \
+--vnet-name $myVnet \
+--name $mySubnet \
+--service-endpoints "Microsoft.Storage"
+
+mySubnetId=$(az network vnet subnet show --resource-group $myRG --vnet-name $myVnet --name $mySubnet --query id --output tsv)
+
+az storage account network-rule add \
+--resource-group $myRG \
+--account-name $myStorageAccount \
+--subnet $mySubnetId
+
+az storage container create \
+--name $myContainer \
+--account-name $myStorageAccount
+
+az datafactory create \
+--location $myLocation \
+--name "adfmdb" \
+--resource-group $myRG

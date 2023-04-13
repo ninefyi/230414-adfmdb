@@ -1,0 +1,18 @@
+name: run-azure-data-factory-pipeline
+run-name: ${{ github.actor }} is deploy
+on: [workflow_dispatch]
+env:
+  AZ_DF_NAME: adfmdb
+  AZ_DF_PARAMS: "{\"SourceStore_Location\":\"files\", \"SourceStore_Directory\":\"\", \"DestinationStore_Location\":\"files\", \"SourceStore_Directory\":\"done\"}"
+  AZ_DF_PIPELINE: "CopyJsonToMongoDBAtlas"
+  AZ_DF_RESOURCE_GROUP: "rg-demo"
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZ_CREDENTIALS }}
+    - run: |
+        az datafactory pipeline create-run --factory-name ${{ env.AZ_DF_NAME }} --parameters ${{ env.AZ_DF_PARAMS }} --name ${{ env.AZ_DF_PIPELINE }} --resource-group ${{ env.AZ_DF_RESOURCE_GROUP }} 

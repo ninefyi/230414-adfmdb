@@ -1,0 +1,605 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name",
+            "defaultValue": "adfmdb"
+        },
+        "MongoDBAtlas_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'MongoDBAtlas'"
+        },
+        "AzureBlobStorage1_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'AzureBlobStorage1'"
+        },
+        "MongoDBAtlas_properties_typeProperties_database": {
+            "type": "string",
+            "defaultValue": "test"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "[concat(parameters('factoryName'), '/MongoDBAtlas')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "MongoDbAtlas",
+                "typeProperties": {
+                    "connectionString": "[parameters('MongoDBAtlas_connectionString')]",
+                    "database": "[parameters('MongoDBAtlas_properties_typeProperties_database')]"
+                },
+                "connectVia": {
+                    "referenceName": "IR-Self-Host",
+                    "type": "IntegrationRuntimeReference"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/integrationRuntimes/IR-Self-Host')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/AzureBlobStorage1')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureBlobStorage",
+                "typeProperties": {
+                    "connectionString": "[parameters('AzureBlobStorage1_connectionString')]"
+                },
+                "connectVia": {
+                    "referenceName": "IR-Self-Host",
+                    "type": "IntegrationRuntimeReference"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/integrationRuntimes/IR-Self-Host')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/IR-Self-Host')]",
+            "type": "Microsoft.DataFactory/factories/integrationRuntimes",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "type": "SelfHosted",
+                "typeProperties": {}
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/BinaryDataSource_Folder')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "description": "It describes the folder in the data source store.",
+                "linkedServiceName": {
+                    "referenceName": "AzureBlobStorage1",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "Container": {
+                        "type": "String"
+                    },
+                    "Directory": {
+                        "type": "String"
+                    }
+                },
+                "annotations": [],
+                "type": "Binary",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobStorageLocation",
+                        "folderPath": {
+                            "value": "@{dataset().Directory}",
+                            "type": "Expression"
+                        },
+                        "container": {
+                            "value": "@{dataset().Container}",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/MongoDbAtlasCollection')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "MongoDBAtlas",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "MongoDbAtlasCollection",
+                "schema": [],
+                "typeProperties": {
+                    "collection": "coll"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/MongoDBAtlas')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/JsonDataSource_File')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "AzureBlobStorage1",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "Container": {
+                        "type": "string"
+                    },
+                    "Directory": {
+                        "type": "string"
+                    },
+                    "filename": {
+                        "type": "string"
+                    }
+                },
+                "annotations": [],
+                "type": "Json",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobStorageLocation",
+                        "fileName": {
+                            "value": "@dataset().filename",
+                            "type": "Expression"
+                        },
+                        "folderPath": {
+                            "value": "@{dataset().Directory}",
+                            "type": "Expression"
+                        },
+                        "container": {
+                            "value": "@{dataset().Container}",
+                            "type": "Expression"
+                        }
+                    }
+                },
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "age": {
+                            "type": "integer"
+                        },
+                        "emails": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "inserted_at": {
+                            "type": "object",
+                            "properties": {
+                                "$date": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/BinaryDataDestination')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "description": "It describes the destination store.",
+                "linkedServiceName": {
+                    "referenceName": "AzureBlobStorage1",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "Container": {
+                        "type": "String"
+                    },
+                    "Directory": {
+                        "type": "String"
+                    },
+                    "filename": {
+                        "type": "string"
+                    }
+                },
+                "annotations": [],
+                "type": "Binary",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobStorageLocation",
+                        "folderPath": {
+                            "value": "@{dataset().Directory}",
+                            "type": "Expression"
+                        },
+                        "container": {
+                            "value": "@{dataset().Container}",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/BinaryDataSource_File')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "description": "It describes the file in the data source store.",
+                "linkedServiceName": {
+                    "referenceName": "AzureBlobStorage1",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "Container": {
+                        "type": "String"
+                    },
+                    "Directory": {
+                        "type": "String"
+                    },
+                    "filename": {
+                        "type": "string"
+                    }
+                },
+                "annotations": [],
+                "type": "Binary",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobStorageLocation",
+                        "fileName": {
+                            "value": "@dataset().filename",
+                            "type": "Expression"
+                        },
+                        "folderPath": {
+                            "value": "@{dataset().Directory}",
+                            "type": "Expression"
+                        },
+                        "container": {
+                            "value": "@{dataset().Container}",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/CopyJsonToMongoDBAtlas')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "description": "Move files from one folder to another folder",
+                "activities": [
+                    {
+                        "name": "GetFileList",
+                        "description": "Get the list of file",
+                        "type": "GetMetadata",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "dataset": {
+                                "referenceName": "BinaryDataSource_Folder",
+                                "type": "DatasetReference",
+                                "parameters": {
+                                    "Container": {
+                                        "value": "@pipeline().parameters.SourceStore_Location",
+                                        "type": "Expression"
+                                    },
+                                    "Directory": {
+                                        "value": "@pipeline().parameters.SourceStore_Directory",
+                                        "type": "Expression"
+                                    }
+                                }
+                            },
+                            "fieldList": [
+                                "childItems"
+                            ],
+                            "storeSettings": {
+                                "type": "AzureBlobStorageReadSettings",
+                                "recursive": true
+                            },
+                            "formatSettings": {
+                                "type": "BinaryReadSettings"
+                            }
+                        }
+                    },
+                    {
+                        "name": "ForEachFile",
+                        "description": "Iterate each file, and move them one by one.",
+                        "type": "ForEach",
+                        "dependsOn": [
+                            {
+                                "activity": "FilterFiles",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "items": {
+                                "value": "@activity('FilterFiles').output.value",
+                                "type": "Expression"
+                            },
+                            "batchCount": 20,
+                            "activities": [
+                                {
+                                    "name": "CopyAFile",
+                                    "description": "Copy a file from the source store to the destination store.",
+                                    "type": "Copy",
+                                    "dependsOn": [
+                                        {
+                                            "activity": "CopyAFileToMongoDB",
+                                            "dependencyConditions": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    ],
+                                    "policy": {
+                                        "timeout": "7.00:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false,
+                                        "secureInput": false
+                                    },
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "source": {
+                                            "type": "BinarySource",
+                                            "storeSettings": {
+                                                "type": "AzureBlobStorageReadSettings",
+                                                "recursive": true
+                                            },
+                                            "formatSettings": {
+                                                "type": "BinaryReadSettings"
+                                            },
+                                            "recursive": false
+                                        },
+                                        "sink": {
+                                            "type": "BinarySink",
+                                            "storeSettings": {
+                                                "type": "AzureBlobStorageWriteSettings"
+                                            }
+                                        },
+                                        "enableStaging": false,
+                                        "dataIntegrationUnits": 0
+                                    },
+                                    "inputs": [
+                                        {
+                                            "referenceName": "BinaryDataSource_File",
+                                            "type": "DatasetReference",
+                                            "parameters": {
+                                                "Container": {
+                                                    "value": "@pipeline().parameters.SourceStore_Location",
+                                                    "type": "Expression"
+                                                },
+                                                "Directory": {
+                                                    "value": "@pipeline().parameters.SourceStore_Directory",
+                                                    "type": "Expression"
+                                                },
+                                                "filename": {
+                                                    "value": "@item().name",
+                                                    "type": "Expression"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "outputs": [
+                                        {
+                                            "referenceName": "BinaryDataDestination",
+                                            "type": "DatasetReference",
+                                            "parameters": {
+                                                "Container": {
+                                                    "value": "@pipeline().parameters.DestinationStore_Location",
+                                                    "type": "Expression"
+                                                },
+                                                "Directory": {
+                                                    "value": "@pipeline().parameters.DestinationStore_Directory",
+                                                    "type": "Expression"
+                                                },
+                                                "filename": {
+                                                    "value": "@item().name",
+                                                    "type": "Expression"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "DeleteAFile",
+                                    "description": "Delete a file from the source store",
+                                    "type": "Delete",
+                                    "dependsOn": [
+                                        {
+                                            "activity": "CopyAFile",
+                                            "dependencyConditions": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    ],
+                                    "policy": {
+                                        "timeout": "7.00:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false,
+                                        "secureInput": false
+                                    },
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "dataset": {
+                                            "referenceName": "BinaryDataSource_File",
+                                            "type": "DatasetReference",
+                                            "parameters": {
+                                                "Container": {
+                                                    "value": "@pipeline().parameters.SourceStore_Location",
+                                                    "type": "Expression"
+                                                },
+                                                "Directory": {
+                                                    "value": "@pipeline().parameters.SourceStore_Directory",
+                                                    "type": "Expression"
+                                                },
+                                                "filename": {
+                                                    "value": "@item().name",
+                                                    "type": "Expression"
+                                                }
+                                            }
+                                        },
+                                        "enableLogging": false,
+                                        "storeSettings": {
+                                            "type": "AzureBlobStorageReadSettings",
+                                            "recursive": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "CopyAFileToMongoDB",
+                                    "description": "Copy a file from the source store to the destination store.",
+                                    "type": "Copy",
+                                    "dependsOn": [],
+                                    "policy": {
+                                        "timeout": "7.00:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false,
+                                        "secureInput": false
+                                    },
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "source": {
+                                            "type": "JsonSource",
+                                            "storeSettings": {
+                                                "type": "AzureBlobStorageReadSettings",
+                                                "recursive": true
+                                            },
+                                            "formatSettings": {
+                                                "type": "JsonReadSettings"
+                                            },
+                                            "recursive": false
+                                        },
+                                        "sink": {
+                                            "type": "MongoDbAtlasSink",
+                                            "writeBatchTimeout": "00:30:00",
+                                            "writeBehavior": "insert"
+                                        },
+                                        "enableStaging": false,
+                                        "dataIntegrationUnits": 0
+                                    },
+                                    "inputs": [
+                                        {
+                                            "referenceName": "JsonDataSource_File",
+                                            "type": "DatasetReference",
+                                            "parameters": {
+                                                "Container": {
+                                                    "value": "@pipeline().parameters.SourceStore_Location",
+                                                    "type": "Expression"
+                                                },
+                                                "Directory": {
+                                                    "value": "@pipeline().parameters.SourceStore_Directory",
+                                                    "type": "Expression"
+                                                },
+                                                "filename": {
+                                                    "value": "@item().name",
+                                                    "type": "Expression"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "outputs": [
+                                        {
+                                            "referenceName": "MongoDbAtlasCollection",
+                                            "type": "DatasetReference",
+                                            "parameters": {}
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "FilterFiles",
+                        "description": "Only files will be selected, the source-folders will not be selected.",
+                        "type": "Filter",
+                        "dependsOn": [
+                            {
+                                "activity": "GetFileList",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "items": {
+                                "value": "@activity('GetFileList').output.childItems",
+                                "type": "Expression"
+                            },
+                            "condition": {
+                                "value": "@equals(item().type, 'File')",
+                                "type": "Expression"
+                            }
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {},
+                    "cancelAfter": {}
+                },
+                "parameters": {
+                    "SourceStore_Location": {
+                        "type": "String",
+                        "defaultValue": "files"
+                    },
+                    "SourceStore_Directory": {
+                        "type": "String"
+                    },
+                    "DestinationStore_Location": {
+                        "type": "String",
+                        "defaultValue": "done"
+                    },
+                    "DestinationStore_Directory": {
+                        "type": "String"
+                    }
+                },
+                "annotations": [],
+                "lastPublishTime": "2023-04-10T10:24:52Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/BinaryDataSource_Folder')]",
+                "[concat(variables('factoryId'), '/datasets/BinaryDataSource_File')]",
+                "[concat(variables('factoryId'), '/datasets/BinaryDataDestination')]",
+                "[concat(variables('factoryId'), '/datasets/JsonDataSource_File')]",
+                "[concat(variables('factoryId'), '/datasets/MongoDbAtlasCollection')]"
+            ]
+        }
+    ]
+}
