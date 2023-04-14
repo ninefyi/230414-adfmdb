@@ -11,7 +11,7 @@
 ```az ad sp create-for-rbac \
 --name "app-for-adf" \
 --role contributor \
---scopes /subscriptions/6af4be60-c02c-46c9-9acc-66a4cf4bbf22/resourceGroups/rg-demo
+--scopes /subscriptions/<SubscriptionId>/resourceGroups/rg-demo
 ```
 
 2. Run the following command to create all resources. ```./prepare.azcli```
